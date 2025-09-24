@@ -12,12 +12,14 @@
 
 ## 설치 및 실행
 
-### 방법 1: 배치 파일 사용 (Windows)
+### 로컬 실행
+
+#### 방법 1: 배치 파일 사용 (Windows)
 ```bash
 run_app.bat
 ```
 
-### 방법 2: 수동 실행
+#### 방법 2: 수동 실행
 ```bash
 # 필요한 패키지 설치
 pip install -r requirements.txt
@@ -25,6 +27,24 @@ pip install -r requirements.txt
 # 앱 실행
 streamlit run app.py
 ```
+
+### Streamlit Community Cloud 배포
+
+1. **GitHub 저장소 준비**
+   - 이 프로젝트를 GitHub 공개 저장소에 업로드
+   - `app.py` 파일이 루트 디렉토리에 위치해야 함
+
+2. **Streamlit Community Cloud 배포**
+   - [share.streamlit.io](https://share.streamlit.io) 접속
+   - GitHub 계정으로 로그인
+   - "New app" 클릭
+   - 저장소, 브랜치, 메인 파일 경로(`app.py`) 선택
+   - "Deploy!" 클릭
+
+3. **배포 후 확인사항**
+   - CSV 파일이 없어도 샘플 데이터로 정상 작동
+   - 자동으로 여러 인코딩을 시도하여 파일 로드
+   - 오류 발생 시 자동으로 샘플 데이터로 대체
 
 ## 데이터 형식
 

@@ -21,14 +21,41 @@ pio.templates.default = "plotly_white"
 @st.cache_data
 def load_data():
     """CSV 파일을 로드하고 데이터를 정리합니다."""
+    import os
+    import glob
+    
     try:
-        # cp-949 인코딩으로 CSV 파일 읽기
-        df = pd.read_csv('202508_202508_주민등록인구및세대현황_월간.csv', encoding='cp949')
+        # CSV 파일 찾기 (여러 인코딩 시도)
+        csv_files = glob.glob('*주민등록인구*.csv') + glob.glob('*인구*.csv')
+        
+        if not csv_files:
+            # CSV 파일이 없는 경우 샘플 데이터 생성
+            st.warning("CSV 파일을 찾을 수 없습니다. 샘플 데이터를 사용합니다.")
+            return create_sample_data()
+        
+        csv_file = csv_files[0]
+        
+        # 여러 인코딩 시도
+        encodings = ['cp949', 'utf-8', 'euc-kr', 'latin1']
+        df = None
+        
+        for encoding in encodings:
+            try:
+                df = pd.read_csv(csv_file, encoding=encoding)
+                st.success(f"파일을 {encoding} 인코딩으로 성공적으로 로드했습니다.")
+                break
+            except UnicodeDecodeError:
+                continue
+        
+        if df is None:
+            st.error("모든 인코딩으로 파일을 읽을 수 없습니다. 샘플 데이터를 사용합니다.")
+            return create_sample_data()
         
         # 숫자 컬럼들을 정수로 변환 (쉼표 제거)
         numeric_columns = ['2025년08월_총인구수', '2025년08월_세대수', '2025년08월_남자 인구수', '2025년08월_여자 인구수']
         for col in numeric_columns:
-            df[col] = df[col].str.replace(',', '').astype(int)
+            if col in df.columns:
+                df[col] = df[col].astype(str).str.replace(',', '').astype(int)
         
         # 행정구역에서 시/구/동 정보 추출
         df['시'] = df['행정구역'].str.extract(r'(\w+시)')
@@ -38,7 +65,35 @@ def load_data():
         return df
     except Exception as e:
         st.error(f"데이터 로드 중 오류가 발생했습니다: {e}")
-        return None
+        st.info("샘플 데이터를 사용합니다.")
+        return create_sample_data()
+
+def create_sample_data():
+    """샘플 데이터를 생성합니다."""
+    sample_data = {
+        '행정구역': [
+            '경기도 용인시 (4146000000)',
+            '경기도 용인시 처인구 (4146100000)',
+            '경기도 용인시 처인구 포곡읍(4146125000)',
+            '경기도 용인시 처인구 모현읍(4146125300)',
+            '경기도 용인시 처인구 이동읍(4146125600)',
+            '경기도 용인시 기흥구 (4146300000)',
+            '경기도 용인시 수지구 (4146500000)'
+        ],
+        '2025년08월_총인구수': [1093639, 284229, 31169, 33990, 19140, 434629, 374781],
+        '2025년08월_세대수': [449693, 130082, 14179, 15636, 8938, 176852, 142759],
+        '2025년08월_세대당 인구': [2.43, 2.18, 2.20, 2.17, 2.14, 2.46, 2.63],
+        '2025년08월_남자 인구수': [541919, 145637, 16145, 17551, 9851, 214022, 182260],
+        '2025년08월_여자 인구수': [551720, 138592, 15024, 16439, 9289, 220607, 192521],
+        '2025년08월_남여 비율': [0.98, 1.05, 1.07, 1.07, 1.06, 0.97, 0.95]
+    }
+    
+    df = pd.DataFrame(sample_data)
+    df['시'] = df['행정구역'].str.extract(r'(\w+시)')
+    df['구'] = df['행정구역'].str.extract(r'(\w+구)')
+    df['동/읍/면'] = df['행정구역'].str.extract(r'(\w+[동읍면])')
+    
+    return df
 
 # 연령대별 인구 데이터 생성 함수 (실제 데이터가 없으므로 샘플 데이터 생성)
 def generate_age_data(df, selected_region):
@@ -89,8 +144,13 @@ def main():
     st.markdown("---")
     
     # 데이터 로드
-    df = load_data()
-    if df is None:
+    try:
+        df = load_data()
+        if df is None or df.empty:
+            st.error("데이터를 로드할 수 없습니다.")
+            st.stop()
+    except Exception as e:
+        st.error(f"앱 실행 중 오류가 발생했습니다: {e}")
         st.stop()
     
     # 사이드바 - 필터 설정
