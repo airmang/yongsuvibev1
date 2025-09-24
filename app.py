@@ -18,7 +18,7 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
 html, body, [class*="css"] {
-    font-family: 'Noto Sans KR', sans-serif;
+    font-family: 'Noto Sans KR', 'Malgun Gothic', '맑은 고딕', sans-serif;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -33,12 +33,18 @@ def load_data():
         # 숫자 데이터 정리 (쉼표 제거 및 숫자 변환)
         numeric_columns = ['2025년08월_총인구수', '2025년08월_세대수', '2025년08월_남자 인구수', '2025년08월_여자 인구수']
         for col in numeric_columns:
-            df[col] = df[col].str.replace(',', '').astype(int)
+            if df[col].dtype == 'object':  # 문자열인 경우만 처리
+                df[col] = df[col].str.replace(',', '').astype(int)
+            else:  # 이미 숫자인 경우
+                df[col] = df[col].astype(int)
         
         # 비율 데이터 정리
         ratio_columns = ['2025년08월_세대당 인구', '2025년08월_남여 비율']
         for col in ratio_columns:
-            df[col] = df[col].str.replace(',', '').astype(float)
+            if df[col].dtype == 'object':  # 문자열인 경우만 처리
+                df[col] = df[col].str.replace(',', '').astype(float)
+            else:  # 이미 숫자인 경우
+                df[col] = df[col].astype(float)
         
         # 행정구역 정보 추출
         df['시도'] = df['행정구역'].str.extract(r'(\w+시)')
@@ -90,7 +96,7 @@ def create_population_pyramid(df_filtered):
         yaxis_title="",
         barmode='relative',
         height=300,
-        font=dict(family="Noto Sans KR", size=12),
+        font=dict(family="Noto Sans KR, Malgun Gothic, 맑은 고딕, sans-serif", size=12),
         xaxis=dict(tickformat=','),
         showlegend=True
     )
@@ -116,7 +122,7 @@ def create_region_comparison(df):
     )
     
     fig.update_layout(
-        font=dict(family="Noto Sans KR", size=12),
+        font=dict(family="Noto Sans KR, Malgun Gothic, 맑은 고딕, sans-serif", size=12),
         xaxis_tickangle=-45,
         height=500
     )
@@ -140,7 +146,7 @@ def create_household_analysis(df_filtered):
     )
     
     fig.update_layout(
-        font=dict(family="Noto Sans KR", size=12),
+        font=dict(family="Noto Sans KR, Malgun Gothic, 맑은 고딕, sans-serif", size=12),
         height=400
     )
     
@@ -169,7 +175,7 @@ def create_gender_ratio_analysis(df_filtered):
                   annotation_text="균등선 (1.0)", annotation_position="top right")
     
     fig.update_layout(
-        font=dict(family="Noto Sans KR", size=12),
+        font=dict(family="Noto Sans KR, Malgun Gothic, 맑은 고딕, sans-serif", size=12),
         xaxis_tickangle=-45,
         height=500
     )
